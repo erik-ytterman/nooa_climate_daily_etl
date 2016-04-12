@@ -80,22 +80,22 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, Generi
 	    this.validateJsonSchema(jsonNode);
 	    
 	    // Extract data from JSON line instance 	
-	    String stationId        = jsonNode.get("id").asText();
-	    Float  stationLatitude  = new Float(jsonNode.get("latitude").asDouble());
-	    Float  stationLongitude = new Float(jsonNode.get("longitude").asDouble());
-	    Float  stationElevation = new Float(jsonNode.get("elevation").asDouble());
-	    String stationName      = jsonNode.get("name").asText();
+	    String  dailyId    = jsonNode.get("id").asText();
+	    Integer dailyYear  = new Integer(jsonNode.get("year").asInt());
+	    Integer dailyMonth = new Integer(jsonNode.get("month").asInt());
+	    Integer dailyDay   = new Integer(jsonNode.get("day").asInt());
+	    Float   dailyValue = new Float(jsonNode.get("value").asDouble());
 	    
 	    // Extract MapReduce meta-data potentially used in KPI calculation
 	    FileSplit fileSplit   = (FileSplit) context.getInputSplit();	
 	    String fileName         = fileSplit.getPath().getName();
 	    
 	    // Configre generic AVRO record output data
-	    this.recordBuilder.set("id", stationId);
-	    this.recordBuilder.set("latitude" , stationLatitude);
-	    this.recordBuilder.set("longitude", stationLongitude);
-	    this.recordBuilder.set("elevation", stationElevation);
-	    this.recordBuilder.set("name", stationName);
+	    this.recordBuilder.set("id"   , dailyId);
+	    this.recordBuilder.set("year" , dailyYear);
+	    this.recordBuilder.set("month", dailyMonth);
+	    this.recordBuilder.set("day"  , dailyDay);
+	    this.recordBuilder.set("value", dailyValue);
 	    
 	    // Generate AVRO record
 	    GenericRecord record = this.recordBuilder.build();
