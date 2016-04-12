@@ -1,0 +1,12 @@
+{
+   "type" : "record",
+   "namespace" : "climate",
+   "name" : "daily",
+   "fields" : [
+      { "name" : "id"    , "type" : "string" , "default" : "NULL" },
+      { "name" : "year"  , "type" : "int" },
+      { "name" : "month" , "type" : "int" },
+      { "name" : "day"   , "type" : "int" },
+      { "name" : "value" , "type" : "float" }
+   ]
+}
