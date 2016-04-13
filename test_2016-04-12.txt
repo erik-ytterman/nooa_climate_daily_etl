@@ -1,0 +1,28 @@
+Without JSON Schema verification:
+
+real	8m56.557s
+user	0m13.236s
+sys	0m4.331s
+
+real	9m39.674s
+user	0m17.926s
+sys	0m3.996s
+
+real	6m9.866s
+user	0m9.901s
+sys	0m2.191s
+
+-----------------------------------------------------------------------
+With JSON Schema verification:
+
+real	23m46.503s
+user	0m18.341s
+sys	0m7.023s
+
+real	22m22.491s
+user	0m15.396s
+sys	0m17.250s
+
+real	26m47.420s
+user	0m24.619s
+sys	0m14.649s
