@@ -26,3 +26,10 @@ sys	0m17.250s
 real	26m47.420s
 user	0m24.619s
 sys	0m14.649s
+
+-----------------------------------------------------------------------
+With "advanced" JSON Schema verification:
+
+real	35m18.224s
+user	0m17.851s
+sys	0m6.184s
