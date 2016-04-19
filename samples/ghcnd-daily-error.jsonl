@@ -77,8 +77,8 @@
 {"id": "USW00014950", "year": 2005, "month": 3, "day": 27, "value": 5.6}
 {"id": "USW00014950", "year": 2005, "month": 3, "day": 28, "value": 10.6}
 {"id": "USW00014950", "year": 2005, "month": 3, "day": 29, "value": 16.7}
-{"id": "USW00014950", "year": 2005, "month": 3, "day": 30, "value": 15.0}
-{"id": "USW00014950", "year": 2005, "month": 4, "day": 1, "value": 7.2}
+{"id": "US00014950", "year": 2005, "month": 13, "day": 30, "value": -315.0}
+{"id": "US000014950", "year": 2005, "month": 14, "day": 1, "value": 315.2}
 {"id": "USW00014950", "year": 2005, "month": 4, "day": 2, "value": 7.2}
 {"id": "USW00014950", "year": 2005, "month": 4, "day": 3, "value": 13.3}
 {"id": "USW00014950", "year": 2005, "month": 4, "day": 4, "value": 16.7}

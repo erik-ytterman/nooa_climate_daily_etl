@@ -6,7 +6,7 @@
       "year"      : { "type" : "integer" },
       "month"     : { "type" : "integer", "minimum" : 1, "maximum" : 12 },
       "day"       : { "type" : "integer" },
-      "value"     : { "type" : "number", "minimum" : -273.15 }
+      "value"     : { "type" : "number", "minimum" : -273.15, "maximum" : 100.0 }
    },
    "required": ["id", "year", "month", "day", "value"]
 }
