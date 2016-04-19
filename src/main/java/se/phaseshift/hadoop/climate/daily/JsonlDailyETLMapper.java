@@ -66,7 +66,7 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, Generi
 	    this.recordBuilder = new GenericRecordBuilder(outputSchema);
 	}
 	catch(Exception e) {
-	    System.err.println(e.toString());
+	    System.out.println(e.toString());
 	}
     }
 
@@ -140,6 +140,13 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, Generi
     }
     
     private String removeLineBreak(String text) {
-	return text.replace("\n", "").replace("\r", "");
+	String result = "NOTHING";
+
+	if(text == null)
+	    result = "NOTHING";
+	else
+	    result = text.replace("\n", "").replace("\r", ""); 
+
+	return result;
     }
 }
