@@ -21,11 +21,13 @@ import com.github.fge.jsonschema.report.ProcessingMessage;
 
 // MapReduce & Hadoop
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
-import org.apache.hadoop.io.Text;
+
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.Text;
 
 // AVRO
 import org.apache.avro.Schema;
@@ -42,7 +44,7 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, Generi
     private GenericRecordBuilder recordBuilder = null;
     private ObjectMapper objectMapper = null;
     private JsonSchema inputSchema = null;
-    private MultipleOutputs<LongWritable, Text> mos = null;
+    private MultipleOutputs outputStreams = null;
 
     @Override
     public void setup(Context context) {
@@ -51,7 +53,7 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, Generi
 	conf.setBoolean("mapred.output.compress", false);
 	
 	// Create multiple outputs 
-	mos = new MultipleOutputs(context);
+	this.outputStreams = new MultipleOutputs(context);
 
 	// Create an Jackson Object mapper needed for JSON parsing
 	this.objectMapper = new ObjectMapper();
@@ -88,7 +90,7 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, Generi
 	    
 	    // Extract MapReduce meta-data potentially used in KPI calculation
 	    FileSplit fileSplit   = (FileSplit) context.getInputSplit();	
-	    String fileName         = fileSplit.getPath().getName();
+	    String fileName       = fileSplit.getPath().getName();
 	    
 	    // Configre generic AVRO record output data
 	    this.recordBuilder.set("id"   , dailyId);
@@ -101,33 +103,35 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, Generi
 	    GenericRecord record = this.recordBuilder.build();
 
 	    // Dispatch data		
-	    context.write(null, record);
+	    this.outputStreams.write("tuples", null, record, "tuples/split");
 	}
 	catch(JsonProcessingException jpe) {
-	    this.mos.write("error", key, value);
-
-	    this.mos.write("error", key, this.removeLineBreak(jpe.getMessage()));
+	    this.outputStreams.write("errors", NullWritable.get(), value, "errors/parsing");
 	}
 	catch(JsonlDailyValidationException jve) {
-	    this.mos.write("error", key, value);
+	    this.outputStreams.write("errors", NullWritable.get(), value, "errors/validation");
 
+	    /*
 	    for(ProcessingMessage pm : jve) {
-		this.mos.write("error", key, this.removeLineBreak(pm.toString()));	
+		this.mos.write("errors", key, this.removeLineBreak(pm.toString()));	
 	    }
+	    */
 	}
 	catch(Exception e) {
-	    this.mos.write("error", key, this.removeLineBreak(e.getMessage()));
+	    /*
+	    this.mos.write(key, this.removeLineBreak(e.getMessage()));
 
 	    for(StackTraceElement ste : e.getStackTrace()) {
-		this.mos.write("error", key, this.removeLineBreak(ste.toString()));		
+		this.mos.write("errors", key, this.removeLineBreak(ste.toString()));		
 	    }
+	    */
 	}
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
 	// Close multiple outputs!
-	this.mos.close();
+	this.outputStreams.close();
     }
 
     private boolean validateJsonSchema(JsonNode jsonNode) throws Exception, JsonlDailyValidationException {

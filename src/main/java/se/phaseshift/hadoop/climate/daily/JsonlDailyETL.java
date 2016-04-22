@@ -14,8 +14,10 @@ import java.util.StringTokenizer;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
 
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+
 
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -83,22 +85,6 @@ public class JsonlDailyETL extends Configured implements Tool {
 	job.setJarByClass(JsonlDailyETL.class);
 	job.setJobName("Ghcnd_Daily_Jsonl_ETL");
 	
-	// Configure input format
-	TextInputFormat.addInputPath(job, inputPath);
-
-	// Configure output format(s)
-
-	// AVRO/Parquet for data
-	Schema outputSchema = new Schema.Parser().parse(outputSchemaString);
-        AvroParquetOutputFormat.setOutputPath(job, outputPath);
-        AvroParquetOutputFormat.setSchema(job, outputSchema);
-        AvroParquetOutputFormat.setCompression(job, CompressionCodecName.SNAPPY);
-        AvroParquetOutputFormat.setCompressOutput(job, true);
-        AvroParquetOutputFormat.setBlockSize(job, 500 * 1024 * 1024);	
-
-	// Text for errors
-	TextOutputFormat.setOutputPath(job, outputPath);
-
 	// Configure job
 	job.setInputFormatClass(TextInputFormat.class);
 	job.setMapperClass(JsonlDailyETLMapper.class);
@@ -107,7 +93,24 @@ public class JsonlDailyETL extends Configured implements Tool {
 	job.setReducerClass(Reducer.class);
 	job.setOutputFormatClass(AvroParquetOutputFormat.class);
 
-	MultipleOutputs.addNamedOutput(job, "error", TextOutputFormat.class, LongWritable.class, Text.class);
+	// Configure input format
+	TextInputFormat.addInputPath(job, inputPath);
+	
+	// Configure tex output format for errors
+	TextOutputFormat.setOutputPath(job, outputPath);
+
+	// Configure AVRO/Parquet output format for data
+	Schema outputSchema = new Schema.Parser().parse(outputSchemaString);
+        AvroParquetOutputFormat.setOutputPath(job, outputPath);
+        AvroParquetOutputFormat.setSchema(job, outputSchema);
+        AvroParquetOutputFormat.setCompression(job, CompressionCodecName.SNAPPY);
+        AvroParquetOutputFormat.setCompressOutput(job, true);
+        AvroParquetOutputFormat.setBlockSize(job, 500 * 1024 * 1024);	
+	AvroParquetOutputFormat.setOutputPath(job, outputPath);
+
+	// Create named multiple outputs
+	MultipleOutputs.addNamedOutput(job, "errors", TextOutputFormat.class, LongWritable.class, Text.class);
+	MultipleOutputs.addNamedOutput(job, "tuples", AvroParquetOutputFormat.class, Void.class, GenericRecord.class);
 
 	return job.waitForCompletion(true) ? 0 : 1;
     }
