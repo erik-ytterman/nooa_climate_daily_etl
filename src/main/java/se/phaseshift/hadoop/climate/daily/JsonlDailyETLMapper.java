@@ -40,7 +40,7 @@ import org.apache.parquet.Log;
 // Logging
 import org.apache.log4j.Logger;
 
-public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, GenericRecord> {
+public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, GenericRecord> {
     private GenericRecordBuilder recordBuilder = null;
     private ObjectMapper objectMapper = null;
     private JsonSchema inputSchema = null;
@@ -118,9 +118,9 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, Generi
 	    */
 	}
 	catch(Exception e) {
+	    this.outputStreams.write("errors", NullWritable.get(), new Text(this.removeLineBreak(e.getMessage())), "errors/framework");
+	    
 	    /*
-	    this.mos.write(key, this.removeLineBreak(e.getMessage()));
-
 	    for(StackTraceElement ste : e.getStackTrace()) {
 		this.mos.write("errors", key, this.removeLineBreak(ste.toString()));		
 	    }

@@ -1,0 +1,3 @@
+se/phaseshift/hadoop/climate/daily/JsonlDailyETL.class
+se/phaseshift/hadoop/climate/daily/JsonlDailyETLMapper.class
+se/phaseshift/hadoop/climate/daily/JsonlDailyValidationException.class
