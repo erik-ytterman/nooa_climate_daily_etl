@@ -88,16 +88,20 @@ public class JsonlDailyETL extends Configured implements Tool {
 	
 	// Configure job
 	job.setInputFormatClass(TextInputFormat.class);
+
 	job.setMapperClass(JsonlDailyETLMapper.class);
+	
 	job.setPartitionerClass(HashPartitioner.class);
-	job.setNumReduceTasks(0);
-	job.setReducerClass(Reducer.class);
-	job.setOutputFormatClass(AvroParquetOutputFormat.class);
+
+	job.setNumReduceTasks(1);
+	job.setReducerClass(JsonlDailyETLReducer.class);
+
+	job.setOutputFormatClass(TextOutputFormat.class);
 
 	// Configure input format
 	TextInputFormat.addInputPath(job, inputPath);
 	
-	// Configure tex output format for errors
+	// Configure text output format for errors, and "mute" default output
 	TextOutputFormat.setOutputPath(job, outputPath);
 	LazyOutputFormat.setOutputFormatClass(job, TextOutputFormat.class);
 

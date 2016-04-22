@@ -40,7 +40,7 @@ import org.apache.parquet.Log;
 // Logging
 import org.apache.log4j.Logger;
 
-public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, GenericRecord> {
+public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, LongWritable, GenericRecord> {
     private GenericRecordBuilder recordBuilder = null;
     private ObjectMapper objectMapper = null;
     private JsonSchema inputSchema = null;
@@ -102,8 +102,8 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, Generi
 	    // Generate AVRO record
 	    GenericRecord record = this.recordBuilder.build();
 
-	    // Dispatch data		
-	    this.outputStreams.write("tuples", null, record, "tuples/split");
+	    // Dispatch data to reducer	
+	    context.write(key, record);
 	}
 	catch(JsonProcessingException jpe) {
 	    this.outputStreams.write("errors", NullWritable.get(), value, "errors/parsing");
@@ -118,13 +118,11 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Void, Generi
 	    */
 	}
 	catch(Exception e) {
-	    /*
-	    this.mos.write(key, this.removeLineBreak(e.getMessage()));
+	    this.outputStreams.write("errors", NullWritable.get(), new Text(this.removeLineBreak(e.getMessage())), "errors/general");
 
 	    for(StackTraceElement ste : e.getStackTrace()) {
-		this.mos.write("errors", key, this.removeLineBreak(ste.toString()));		
+		this.outputStreams.write("errors", NullWritable.get(), new Text(this.removeLineBreak(ste.toString())), "errors/general");
 	    }
-	    */
 	}
     }
 
