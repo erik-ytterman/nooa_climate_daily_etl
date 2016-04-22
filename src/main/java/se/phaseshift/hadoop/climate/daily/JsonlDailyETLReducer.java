@@ -26,7 +26,9 @@ import org.apache.parquet.Log;
 // Logging
 import org.apache.log4j.Logger;
 
-public class JsonlDailyETLReducer extends Reducer<LongWritable, GenericRecord, LongWritable, GenericRecord> {
+// XXX Generic record does not implement Writable, thus this will fail!
+// XXX http://stackoverflow.com/questions/22135566/not-understanding-a-mapreduce-npe
+public class JsonlDailyETLReducer extends Reducer<Text, GenericRecord, Void, GenericRecord> {
     private MultipleOutputs outputStreams = null;
 
     @Override
@@ -50,10 +52,10 @@ public class JsonlDailyETLReducer extends Reducer<LongWritable, GenericRecord, L
     }
 
     @Override
-    public void reduce(LongWritable key, Iterable<GenericRecord> records, Context context) throws IOException, InterruptedException {
+    public void reduce(Text key, Iterable<GenericRecord> records, Context context) throws IOException, InterruptedException {
 	for(GenericRecord record: records) {
-	    // Dispatch data		
-	    this.outputStreams.write("tuples", NullWritable.get(), record, "tuples/partition");
+	    // Dispatch data
+	    context.write(null, record);
 	}
     }
 

@@ -62,11 +62,12 @@ public class JsonlDailyETL extends Configured implements Tool {
 	Path inputSchemaPath = new Path(args[3]);
 	Path errorPath = new Path(args[4]);				  
 
-	// Create configuration and filesystem objects
+	// Create configuration
         Configuration conf = this.getConf();
-        FileSystem fs = FileSystem.get(conf);
+	conf.setBoolean("mapred.output.compress", false);
 
 	// Clean output area, othetwise job will terminate
+        FileSystem fs = FileSystem.get(conf);
 	fs.delete(outputPath, true);
 
 	// Read the output (AVRO) schema
@@ -88,18 +89,27 @@ public class JsonlDailyETL extends Configured implements Tool {
 	
 	// Configure job
 	job.setInputFormatClass(TextInputFormat.class);
+
 	job.setMapperClass(JsonlDailyETLMapper.class);
+
 	job.setPartitionerClass(HashPartitioner.class);
-	job.setNumReduceTasks(0);
-	job.setReducerClass(Reducer.class);
+	job.setNumReduceTasks(1);
+	job.setReducerClass(JsonlDailyETLReducer.class);
+
+	job.setMapOutputKeyClass(Text.class);
+	job.setMapOutputValueClass(GenericRecord.class);
+
+	job.setOutputKeyClass(Void.class);
+	job.setOutputValueClass(GenericRecord.class);
+
 	job.setOutputFormatClass(AvroParquetOutputFormat.class);
 
 	// Configure input format
 	TextInputFormat.addInputPath(job, inputPath);
 	
 	// Configure tex output format for errors
-	TextOutputFormat.setOutputPath(job, outputPath);
-	LazyOutputFormat.setOutputFormatClass(job, TextOutputFormat.class);
+	AvroParquetOutputFormat.setOutputPath(job, outputPath);
+	LazyOutputFormat.setOutputFormatClass(job, AvroParquetOutputFormat.class);
 
 	// Configure AVRO/Parquet output format for data
 	Schema outputSchema = new Schema.Parser().parse(outputSchemaString);

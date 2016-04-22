@@ -40,6 +40,8 @@ import org.apache.parquet.Log;
 // Logging
 import org.apache.log4j.Logger;
 
+// XXX Generic record does not implement Writable, thus this will fail!
+// XXX http://stackoverflow.com/questions/22135566/not-understanding-a-mapreduce-npe
 public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, GenericRecord> {
     private GenericRecordBuilder recordBuilder = null;
     private ObjectMapper objectMapper = null;
@@ -103,7 +105,7 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Generi
 	    GenericRecord record = this.recordBuilder.build();
 
 	    // Dispatch data		
-	    this.outputStreams.write("tuples", null, record, "tuples/split");
+	    context.write(new Text(dailyId), record);
 	}
 	catch(JsonProcessingException jpe) {
 	    this.outputStreams.write("errors", NullWritable.get(), value, "errors/parsing");
