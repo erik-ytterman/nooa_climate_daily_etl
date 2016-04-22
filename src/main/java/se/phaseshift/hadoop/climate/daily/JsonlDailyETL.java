@@ -26,6 +26,7 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
+import org.apache.hadoop.mapreduce.lib.output.LazyOutputFormat;
 
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.conf.Configuration;
@@ -98,6 +99,7 @@ public class JsonlDailyETL extends Configured implements Tool {
 	
 	// Configure tex output format for errors
 	TextOutputFormat.setOutputPath(job, outputPath);
+	LazyOutputFormat.setOutputFormatClass(job, TextOutputFormat.class);
 
 	// Configure AVRO/Parquet output format for data
 	Schema outputSchema = new Schema.Parser().parse(outputSchemaString);
