@@ -20,13 +20,18 @@ import org.apache.hadoop.io.Text;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 
+// AVRO UTILS
+import se.phaseshift.hadoop.util.WritableGenericRecord;
+
 // Parquet
 import org.apache.parquet.Log;
 
 // Logging
 import org.apache.log4j.Logger;
 
-public class JsonlDailyETLReducer extends Reducer<LongWritable, GenericRecord, LongWritable, GenericRecord> {
+// XXX Generic record does not implement Writable, thus this will fail!
+// XXX http://stackoverflow.com/questions/22135566/not-understanding-a-mapreduce-npe
+public class JsonlDailyETLReducer extends Reducer<Text, WritableGenericRecord, Void, GenericRecord> {
     private MultipleOutputs outputStreams = null;
 
     @Override
@@ -38,6 +43,7 @@ public class JsonlDailyETLReducer extends Reducer<LongWritable, GenericRecord, L
 	// Create multiple outputs 
 	this.outputStreams = new MultipleOutputs(context);
 
+	/*
 	try {
 	    this.outputStreams.write("errors", NullWritable.get(), new Text("REDUCE"), "errors/reduction");
 	}
@@ -47,13 +53,14 @@ public class JsonlDailyETLReducer extends Reducer<LongWritable, GenericRecord, L
 	catch(InterruptedException ie) {
 	    System.err.println(ie);
 	}
+	*/
     }
 
     @Override
-    public void reduce(LongWritable key, Iterable<GenericRecord> records, Context context) throws IOException, InterruptedException {
-	for(GenericRecord record: records) {
-	    // Dispatch data		
-	    this.outputStreams.write("tuples", NullWritable.get(), record, "tuples/partition");
+    public void reduce(Text key, Iterable<WritableGenericRecord> records, Context context) throws IOException, InterruptedException {
+	for(WritableGenericRecord record: records) {
+	    // Dispatch data
+	    // context.write(null, record.getRecord());
 	}
     }
 
