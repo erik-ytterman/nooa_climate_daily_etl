@@ -25,13 +25,11 @@ public class WritableGenericRecord implements Writable {
     private BinaryDecoder binaryDecoder;
 
     protected GenericRecord record;
-    protected Schema schema;
     
     public WritableGenericRecord() {}
 
-    public WritableGenericRecord(GenericRecord record, Schema schema) {
+    public WritableGenericRecord(GenericRecord record) {
 	this.record = record;
-	this.schema = schema;
     }
     
     public void setRecord(GenericRecord record) {
@@ -39,24 +37,31 @@ public class WritableGenericRecord implements Writable {
     }
     
     public GenericRecord getRecord() {
-	return record;
+	return this.record;
     }
     
     @Override
     public void write(DataOutput out) throws IOException {
-	GenericDatumWriter<GenericRecord> gdw = new GenericDatumWriter<GenericRecord>(this.schema);
-	this.binaryEncoder = EncoderFactory.get().directBinaryEncoder((DataOutputStream) out, this.binaryEncoder);
+	// Write schema
+	Schema schema = record.getSchema();
+	String schemaString = schema.toString(false);
+	out.writeUTF(schemaString);
 
+	// Write data
+	GenericDatumWriter<GenericRecord> gdw = new GenericDatumWriter<GenericRecord>(schema);
+	this.binaryEncoder = EncoderFactory.get().directBinaryEncoder((DataOutputStream) out, this.binaryEncoder);
 	gdw.write(this.record, this.binaryEncoder);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-	// GenericDatumReader<GenericRecord> gdr = new GenericDatumReader<GenericRecord>(this.schema);
-	// GenericDatumReader<GenericRecord> gdr = new GenericDatumReader<GenericRecord>();
-	// this.binaryDecoder = DecoderFactory.defaultFactory().createBinaryDecoder((InputStream) in, this.binaryDecoder);
+	// Read schema
+	Schema.Parser parser = new Schema.Parser();
+	Schema schema = parser.parse(in.readUTF());
 
-        // this.record = new GenericData.Record(this.schema);
-	// this.record = gdr.read(this.record, this.binaryDecoder);
+	// Read data
+	GenericDatumReader<GenericRecord> gdr = new GenericDatumReader<GenericRecord>(schema);
+	this.binaryDecoder = DecoderFactory.defaultFactory().createBinaryDecoder((InputStream) in, null);
+	this.record = gdr.read(this.record, this.binaryDecoder);
     }
 }

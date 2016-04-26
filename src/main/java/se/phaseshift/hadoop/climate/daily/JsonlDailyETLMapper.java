@@ -106,7 +106,7 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Writab
 	    this.recordBuilder.set("value", dailyValue);
 
 	    // Generate AVRO record and rap it to be writable
-	    WritableGenericRecord record = new WritableGenericRecord(this.recordBuilder.build(), this.outputSchema);
+	    WritableGenericRecord record = new WritableGenericRecord(this.recordBuilder.build());
 
 	    // Dispatch data		
 	    context.write(new Text(dailyId), record);
