@@ -34,6 +34,9 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.generic.GenericRecord;
 
+// AVRO UTILS
+import se.phaseshift.hadoop.util.WritableGenericRecord;
+
 // Parquet
 import org.apache.parquet.Log;
 
@@ -42,10 +45,11 @@ import org.apache.log4j.Logger;
 
 // XXX Generic record does not implement Writable, thus this will fail!
 // XXX http://stackoverflow.com/questions/22135566/not-understanding-a-mapreduce-npe
-public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, GenericRecord> {
+public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, WritableGenericRecord> {
     private GenericRecordBuilder recordBuilder = null;
     private ObjectMapper objectMapper = null;
     private JsonSchema inputSchema = null;
+    private Schema outputSchema = null;
     private MultipleOutputs outputStreams = null;
 
     @Override
@@ -66,8 +70,8 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Generi
 	    this.inputSchema = JsonSchemaFactory.byDefault().getJsonSchema(schemaNode);
 
 	    // Create a record builder for output (AVRO) records
-	    Schema outputSchema = new Schema.Parser().parse(conf.get("climate.stations.output.schema"));
-	    this.recordBuilder = new GenericRecordBuilder(outputSchema);
+	    this.outputSchema = new Schema.Parser().parse(conf.get("climate.stations.output.schema"));
+	    this.recordBuilder = new GenericRecordBuilder(this.outputSchema);
 	}
 	catch(Exception e) {
 	    System.out.println(e.toString());
@@ -100,9 +104,9 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Generi
 	    this.recordBuilder.set("month", dailyMonth);
 	    this.recordBuilder.set("day"  , dailyDay);
 	    this.recordBuilder.set("value", dailyValue);
-	    
-	    // Generate AVRO record
-	    GenericRecord record = this.recordBuilder.build();
+
+	    // Generate AVRO record and rap it to be writable
+	    WritableGenericRecord record = new WritableGenericRecord(this.recordBuilder.build(), this.outputSchema);
 
 	    // Dispatch data		
 	    context.write(new Text(dailyId), record);

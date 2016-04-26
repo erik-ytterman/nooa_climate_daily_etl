@@ -41,6 +41,8 @@ import org.apache.parquet.avro.AvroParquetOutputFormat;
 import org.apache.parquet.avro.AvroSchemaConverter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 
+import se.phaseshift.hadoop.util.WritableGenericRecord;
+
 public class JsonlDailyETL extends Configured implements Tool {
 
     public static void main(String[] args)  throws Exception {
@@ -97,10 +99,10 @@ public class JsonlDailyETL extends Configured implements Tool {
 	job.setReducerClass(JsonlDailyETLReducer.class);
 
 	job.setMapOutputKeyClass(Text.class);
-	job.setMapOutputValueClass(GenericRecord.class);
+	job.setMapOutputValueClass(WritableGenericRecord.class);
 
-	job.setOutputKeyClass(Void.class);
-	job.setOutputValueClass(GenericRecord.class);
+	// job.setOutputKeyClass(Void.class);
+	// job.setOutputValueClass(GenericRecord.class);
 
 	job.setOutputFormatClass(AvroParquetOutputFormat.class);
 
