@@ -123,8 +123,10 @@ public class JsonlDailyETL extends Configured implements Tool {
 	AvroParquetOutputFormat.setOutputPath(job, outputPath);
 
 	// Create named multiple outputs
-	MultipleOutputs.addNamedOutput(job, "errors", TextOutputFormat.class, LongWritable.class, Text.class);
-	MultipleOutputs.addNamedOutput(job, "tuples", AvroParquetOutputFormat.class, Void.class, GenericRecord.class);
+	MultipleOutputs.addNamedOutput(job, "framework", TextOutputFormat.class, Void.class, Text.class);
+	MultipleOutputs.addNamedOutput(job, "parsing", TextOutputFormat.class, Void.class, Text.class);
+	MultipleOutputs.addNamedOutput(job, "validation", TextOutputFormat.class, Void.class, Text.class);
+	MultipleOutputs.addNamedOutput(job, "statistics", AvroParquetOutputFormat.class, Void.class, GenericRecord.class);
 
 	return job.waitForCompletion(true) ? 0 : 1;
     }

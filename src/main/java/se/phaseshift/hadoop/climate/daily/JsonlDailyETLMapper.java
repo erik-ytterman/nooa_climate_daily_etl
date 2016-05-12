@@ -43,14 +43,16 @@ import org.apache.parquet.Log;
 // Logging
 import org.apache.log4j.Logger;
 
-// XXX Generic record does not implement Writable, thus this will fail!
-// XXX http://stackoverflow.com/questions/22135566/not-understanding-a-mapreduce-npe
 public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, WritableGenericRecord> {
     private GenericRecordBuilder recordBuilder = null;
     private ObjectMapper objectMapper = null;
     private JsonSchema inputSchema = null;
     private Schema outputSchema = null;
     private MultipleOutputs outputStreams = null;
+
+    /*---------------------------------------------------------------------------------------------------*/
+    /* MAPPER IMPLEMENTATION                                                                             */
+    /*---------------------------------------------------------------------------------------------------*/    
 
     @Override
     public void setup(Context context) {
@@ -82,10 +84,10 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Writab
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 	try {
 	    // Parse JSON line data into JsonNode
-	    JsonNode jsonNode = this.objectMapper.readTree(value.toString());
+	    JsonNode jsonNode = this.parseJsonInstance(value.toString());
 	    
 	    // Validate against schema
-	    this.validateJsonSchema(jsonNode);
+	    this.validateJsonInstance(jsonNode);
 	    
 	    // Extract data from JSON line instance 	
 	    String  dailyId    = jsonNode.get("id").asText();
@@ -112,25 +114,13 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Writab
 	    context.write(new Text(dailyId), record);
 	}
 	catch(JsonProcessingException jpe) {
-	    this.outputStreams.write("errors", NullWritable.get(), value, "errors/parsing");
+	    this.writeParserError(value, jpe);
 	}
 	catch(JsonlDailyValidationException jve) {
-	    this.outputStreams.write("errors", NullWritable.get(), value, "errors/validation");
-
-	    /*
-	    for(ProcessingMessage pm : jve) {
-		this.mos.write("errors", key, this.removeLineBreak(pm.toString()));	
-	    }
-	    */
+	    this.writeValidationError(value, jve);
 	}
 	catch(Exception e) {
-	    this.outputStreams.write("errors", NullWritable.get(), new Text(this.removeLineBreak(e.getMessage())), "errors/framework");
-	    
-	    /*
-	    for(StackTraceElement ste : e.getStackTrace()) {
-		this.outputStreams.write("errors", NullWritable.get(), new Text(this.removeLineBreak(ste.toString())), "errors/general");
-	    }
-	    */
+	    this.writeFrameworkError(e);
 	}
     }
 
@@ -140,7 +130,26 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Writab
 	this.outputStreams.close();
     }
 
-    private boolean validateJsonSchema(JsonNode jsonNode) throws Exception, JsonlDailyValidationException {
+    /*---------------------------------------------------------------------------------------------------*/
+    /* PARSING HELPERS                                                                                   */
+    /*---------------------------------------------------------------------------------------------------*/
+
+    private JsonNode parseJsonInstance(String jsonString) throws Exception, JsonProcessingException {
+	return this.objectMapper.readTree(jsonString);
+    }
+
+    private void writeParserError(Text value, JsonProcessingException jpe) throws IOException, InterruptedException {
+	this.outputStreams.write("parsing", 
+				 NullWritable.get(), 
+				 value, 
+				 "errors/parsing");
+    }
+
+    /*---------------------------------------------------------------------------------------------------*/
+    /* VALIDATION HELPERS                                                                                */
+    /*---------------------------------------------------------------------------------------------------*/
+    
+    private boolean validateJsonInstance(JsonNode jsonNode) throws Exception, JsonlDailyValidationException {
 	ProcessingReport validationReport = this.inputSchema.validate(jsonNode);
 	if(!validationReport.isSuccess()) { 
 	    throw new JsonlDailyValidationException(validationReport); 
@@ -149,6 +158,39 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Writab
 	return true;
     }
     
+    private void writeValidationError(Text value, JsonlDailyValidationException jve) throws IOException, InterruptedException {
+	this.outputStreams.write("validation", NullWritable.get(), value, "errors/validation");
+	
+	for(ProcessingMessage pm : jve) {
+	    this.outputStreams.write("validation", 
+				     NullWritable.get(), 
+				     this.removeLineBreak(pm.toString()),
+				     "errors/validation");	
+	}
+    }
+
+    /*---------------------------------------------------------------------------------------------------*/
+    /* FRAMEWORK HELPERS                                                                                 */
+    /*---------------------------------------------------------------------------------------------------*/   
+
+    private void writeFrameworkError(Exception e) throws IOException, InterruptedException {
+	this.outputStreams.write("framework", 
+				 NullWritable.get(), 
+				 new Text(this.removeLineBreak(e.getMessage())), 
+				 "errors/framework");
+	    
+	for(StackTraceElement ste : e.getStackTrace()) {
+	    this.outputStreams.write("framework", 
+				     NullWritable.get(), 
+				     new Text(this.removeLineBreak(ste.toString())), 
+				     "errors/framework");
+	}
+    }
+
+    /*---------------------------------------------------------------------------------------------------*/
+    /* GENERIC HELPERS                                                                                   */
+    /*---------------------------------------------------------------------------------------------------*/
+
     private String removeLineBreak(String text) {
 	String result = "NOTHING";
 
