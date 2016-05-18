@@ -60,7 +60,8 @@ public class JsonlDailyETLReducer extends Reducer<Text, WritableGenericRecord, V
     public void reduce(Text key, Iterable<WritableGenericRecord> records, Context context) throws IOException, InterruptedException {
 	for(WritableGenericRecord record: records) {
 	    // Dispatch data
-	    context.write(null, record.getRecord());
+	    this.outputStreams.write("partitions", null, record.getRecord(), "partitions/" + key.toString() + "/data");
+	    // context.write(null, record.getRecord());
 	}
     }
 

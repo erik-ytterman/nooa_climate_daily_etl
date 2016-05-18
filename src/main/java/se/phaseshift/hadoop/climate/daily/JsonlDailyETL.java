@@ -95,14 +95,11 @@ public class JsonlDailyETL extends Configured implements Tool {
 	job.setMapperClass(JsonlDailyETLMapper.class);
 
 	job.setPartitionerClass(HashPartitioner.class);
-	job.setNumReduceTasks(1);
+	job.setNumReduceTasks(2);
 	job.setReducerClass(JsonlDailyETLReducer.class);
 
 	job.setMapOutputKeyClass(Text.class);
 	job.setMapOutputValueClass(WritableGenericRecord.class);
-
-	// job.setOutputKeyClass(Void.class);
-	// job.setOutputValueClass(GenericRecord.class);
 
 	job.setOutputFormatClass(AvroParquetOutputFormat.class);
 
@@ -126,7 +123,7 @@ public class JsonlDailyETL extends Configured implements Tool {
 	MultipleOutputs.addNamedOutput(job, "framework", TextOutputFormat.class, Void.class, Text.class);
 	MultipleOutputs.addNamedOutput(job, "parsing", TextOutputFormat.class, Void.class, Text.class);
 	MultipleOutputs.addNamedOutput(job, "validation", TextOutputFormat.class, Void.class, Text.class);
-	MultipleOutputs.addNamedOutput(job, "statistics", AvroParquetOutputFormat.class, Void.class, GenericRecord.class);
+	MultipleOutputs.addNamedOutput(job, "partitions", AvroParquetOutputFormat.class, Void.class, GenericRecord.class);
 
 	return job.waitForCompletion(true) ? 0 : 1;
     }
