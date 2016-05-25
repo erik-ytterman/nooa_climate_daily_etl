@@ -18,6 +18,7 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.github.fge.jsonschema.report.ProcessingReport;
 import com.github.fge.jsonschema.report.ProcessingMessage;
+import com.github.fge.jsonschema.report.LogLevel;
 
 // MapReduce & Hadoop
 import org.apache.hadoop.mapreduce.Mapper;
@@ -120,13 +121,36 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Writab
 	    // Increment how many tuples failed parsing
 	    context.getCounter(JsonlDailyETL.COUNTERS.FAILED_PARSING).increment(1);
 
-	    this.writeParserError(value, jpe);
+	    // this.writeParserError(value, jpe);
 	}
 	catch(JsonlDailyValidationException jve) {
 	    // Increment how many tuples failed validation
 	    context.getCounter(JsonlDailyETL.COUNTERS.FAILED_VALIDATION).increment(1);
 
-	    this.writeValidationError(value, jve);
+	    /* (ProcessingMessage JSON node value in text:
+	    { level="error", 
+	      schema={"loadingURI":"#","pointer":"/properties/year"}, 
+              instance={"pointer":"/year"}, 
+              domain="validation", 
+              keyword="minimum", 
+              message="number is lower than the required minimum", 
+              minimum=1900, 
+              found=1895}
+	    */
+
+	    for(ProcessingMessage pm : jve) {
+		JsonNode processingMessageNode = pm.asJson();
+		JsonNode instanceNode = processingMessageNode.get("instance");
+		JsonNode pointerNode = instanceNode.get("pointer");
+		String pointerValue = pointerNode.asText();
+
+		this.outputStreams.write("validation", 
+					 NullWritable.get(), 
+					 pointerValue.toString() + " : " + value,
+					 "errors/validation");	
+	    }
+
+	    // this.writeValidationError(value, jve);
 	}
 	catch(Exception e) {
 	    this.writeFrameworkError(e);
