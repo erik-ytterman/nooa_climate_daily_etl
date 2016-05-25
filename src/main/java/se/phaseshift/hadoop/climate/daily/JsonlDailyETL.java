@@ -132,7 +132,7 @@ public class JsonlDailyETL extends Configured implements Tool {
 	MultipleOutputs.addNamedOutput(job, "validation", TextOutputFormat.class, Void.class, Text.class);
 	MultipleOutputs.addNamedOutput(job, "partitions", AvroParquetOutputFormat.class, Void.class, GenericRecord.class);
 
-	job.waitForCompletion(false);
+	job.waitForCompletion(true);
 
 	Counters counters = job.getCounters();
 	System.out.printf("Processed: %d Parse error: %d, Validation error: %d\n",
