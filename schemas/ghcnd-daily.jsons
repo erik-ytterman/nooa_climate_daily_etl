@@ -2,8 +2,8 @@
    "title": "NOAA GHCND Daily average temperature description",
    "type": "object",
    "properties": {
-      "id"        : { "type" : "string", "pattern" : "[A-Z]{3}[0-9]{8}" },
-      "year"      : { "type" : "integer" },
+      "id"        : { "type" : "string", "pattern" : "[A-Z]{2,3}[0-9]{4,9}[A-Z]{0,4}" },
+      "year"      : { "type" : "integer", "minimum" : 1900 },
       "month"     : { "type" : "integer", "minimum" : 1, "maximum" : 12 },
       "day"       : { "type" : "integer" },
       "value"     : { "type" : "number", "minimum" : -273.15, "maximum" : 100.0 }
