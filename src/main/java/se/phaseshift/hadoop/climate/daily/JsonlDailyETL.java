@@ -20,7 +20,8 @@ import org.apache.hadoop.io.Text;
 
 
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.Counters;
+// import org.apache.hadoop.mapreduce.Reducer;
 
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
@@ -44,6 +45,12 @@ import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import se.phaseshift.hadoop.util.WritableGenericRecord;
 
 public class JsonlDailyETL extends Configured implements Tool {
+
+    public static enum COUNTERS {
+	TOTAL_PROCESSED,
+	FAILED_PARSING,
+	FAILED_VALIDATION
+    }
 
     public static void main(String[] args)  throws Exception {
 	if(args.length >= 5) {
@@ -125,7 +132,15 @@ public class JsonlDailyETL extends Configured implements Tool {
 	MultipleOutputs.addNamedOutput(job, "validation", TextOutputFormat.class, Void.class, Text.class);
 	MultipleOutputs.addNamedOutput(job, "partitions", AvroParquetOutputFormat.class, Void.class, GenericRecord.class);
 
-	return job.waitForCompletion(true) ? 0 : 1;
+	job.waitForCompletion(false);
+
+	Counters counters = job.getCounters();
+	System.out.printf("Processed: %d Parse error: %d, Validation error: %d\n",
+			  counters.findCounter(COUNTERS.TOTAL_PROCESSED).getValue(),
+			  counters.findCounter(COUNTERS.FAILED_PARSING).getValue(),
+			  counters.findCounter(COUNTERS.FAILED_VALIDATION).getValue());
+
+	return 0;
     }
 
     private String inputStreamToString(InputStream is) throws IOException {

@@ -83,6 +83,9 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Writab
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 	try {
+	    // Increment how many tuples were processed
+	    context.getCounter(JsonlDailyETL.COUNTERS.TOTAL_PROCESSED).increment(1);
+
 	    // Parse JSON line data into JsonNode
 	    JsonNode jsonNode = this.parseJsonInstance(value.toString());
 	    
@@ -114,9 +117,15 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Writab
 	    context.write(new Text(dailyYear.toString()), record);
 	}
 	catch(JsonProcessingException jpe) {
+	    // Increment how many tuples failed parsing
+	    context.getCounter(JsonlDailyETL.COUNTERS.FAILED_PARSING).increment(1);
+
 	    this.writeParserError(value, jpe);
 	}
 	catch(JsonlDailyValidationException jve) {
+	    // Increment how many tuples failed validation
+	    context.getCounter(JsonlDailyETL.COUNTERS.FAILED_VALIDATION).increment(1);
+
 	    this.writeValidationError(value, jve);
 	}
 	catch(Exception e) {
