@@ -95,7 +95,7 @@ public class JsonlDailyETL extends Configured implements Tool {
 	job.setMapperClass(JsonlDailyETLMapper.class);
 
 	job.setPartitionerClass(HashPartitioner.class);
-	job.setNumReduceTasks(2);
+	job.setNumReduceTasks(12);
 	job.setReducerClass(JsonlDailyETLReducer.class);
 
 	job.setMapOutputKeyClass(Text.class);
