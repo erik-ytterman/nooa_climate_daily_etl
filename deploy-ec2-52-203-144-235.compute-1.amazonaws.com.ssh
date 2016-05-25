@@ -1,0 +1,5 @@
+tar -cvzf nooa_climate_daily_etl.tar.gz ./run_cluster.sh ./target/NooaClimateDailyETL-1.0-SNAPSHOT.jar
+scp -i ~/Keys/NewKeyPair.pem ./nooa_climate_daily_etl.tar.gz ubuntu@ec2-52-203-144-235.compute-1.amazonaws.com:/home/cloudera/Deploy/Jobs/nooa_climate_daily_etl.tar.gz
+
+
+
