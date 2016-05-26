@@ -48,7 +48,10 @@ public class JsonlDailyETL extends Configured implements Tool {
     public static enum COUNTERS {
 	TOTAL_PROCESSED,
 	FAILED_PARSING,
-	FAILED_VALIDATION
+	TYPE_ERROR,
+	FIELD_MISSING,
+	VALUE_ERROR,
+	OTHER_VALIDATION
     }
 
     public static void main(String[] args)  throws Exception {
@@ -134,10 +137,13 @@ public class JsonlDailyETL extends Configured implements Tool {
 	job.waitForCompletion(true);
 
 	Counters counters = job.getCounters();
-	System.out.printf("Processed: %d Parse error: %d, Validation error: %d\n",
+	System.out.printf("Tuples processed: %d\n Parse errors: %d\n Type errors: %d\n Missing fields: %d\n Illegal values: %d\n Other validation errors: %d\n",
 			  counters.findCounter(COUNTERS.TOTAL_PROCESSED).getValue(),
 			  counters.findCounter(COUNTERS.FAILED_PARSING).getValue(),
-			  counters.findCounter(COUNTERS.FAILED_VALIDATION).getValue());
+			  counters.findCounter(COUNTERS.TYPE_ERROR).getValue(),
+			  counters.findCounter(COUNTERS.FIELD_MISSING).getValue(),
+			  counters.findCounter(COUNTERS.VALUE_ERROR).getValue(),
+			  counters.findCounter(COUNTERS.OTHER_VALIDATION).getValue());
 
 	return 0;
     }

@@ -124,8 +124,7 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Writab
 	    // this.writeParserError(value, jpe);
 	}
 	catch(JsonlDailyValidationException jve) {
-	    // Increment how many tuples failed validation
-	    context.getCounter(JsonlDailyETL.COUNTERS.FAILED_VALIDATION).increment(1);
+
 
 	    /* (ProcessingMessage JSON node value in text:
 	    { level="error", 
@@ -141,12 +140,42 @@ public class JsonlDailyETLMapper extends Mapper<LongWritable, Text, Text, Writab
 	    for(ProcessingMessage pm : jve) {
 		JsonNode processingMessageNode = pm.asJson();
 		JsonNode instanceNode = processingMessageNode.get("instance");
-		JsonNode pointerNode = instanceNode.get("pointer");
-		String pointerValue = pointerNode.asText();
+		JsonNode keywordNode = processingMessageNode.get("keyword");
+		String keywordValue = keywordNode.asText();
 
+		switch(keywordValue) {
+		case "type":
+		    // Type error
+		    context.getCounter(JsonlDailyETL.COUNTERS.TYPE_ERROR).increment(1);
+
+		    /*
+		      JsonNode pointerNode = instanceNode.get("pointer");
+		      String pointerValue = pointerNode.asText();
+		    */
+		    break;
+		case "required":
+		    // Missing field
+		    context.getCounter(JsonlDailyETL.COUNTERS.FIELD_MISSING).increment(1);
+		    break;
+		case "pattern":
+		case "maximum":
+		case "minimum":
+		    // Semantic error (Wrong string format, illegal value
+		    context.getCounter(JsonlDailyETL.COUNTERS.VALUE_ERROR).increment(1);
+
+		    /*
+		      JsonNode pointerNode = instanceNode.get("pointer");
+		      String pointerValue = pointerNode.asText();
+		    */
+		    break;
+		default:
+		    // Other faile validation
+		    context.getCounter(JsonlDailyETL.COUNTERS.OTHER_VALIDATION).increment(1);
+		}
+		
 		this.outputStreams.write("validation", 
 					 NullWritable.get(), 
-					 pointerValue.toString() + " : " + value,
+					 value + " -> " + processingMessageNode.toString(),
 					 "errors/validation");	
 	    }
 
